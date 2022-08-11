@@ -7,12 +7,26 @@ namespace Task1
   {
     static void Main(string[] args)
     {
-      Console.Write("Enter number of players: ");
-      byte playerNum = Convert.ToByte(Console.ReadLine());
+      byte playerNum;
+      while (true)
+      {
+        Console.Write("Enter number of players: ");
+        string value = Console.ReadLine();
+        bool checkParse = byte.TryParse(value, out playerNum);
+
+        if (!checkParse)
+        {
+          Console.WriteLine("The number of players can be from 1 to 255. Please enter a valid value.");
+        } else
+        {
+          break;
+        }
+      }
+      
 
       string? firstWord;
       string pattern = @"^[A-Za-z]+$";
-      string[] arrayWords = new String[0];
+      List<string> arrayWords = new List<string>();
       var arrayLetters = new Dictionary<char, int>(){};
       while (true)
       {
@@ -28,13 +42,12 @@ namespace Task1
         }
         else
         {
-          foreach (char letter in firstWord.Distinct().ToArray())
+          foreach (char letter in firstWord.Distinct())
           {
             int count = firstWord.Count(i => i == letter);
             arrayLetters[letter] = count;
           }
-          Array.Resize(ref arrayWords, arrayWords.Length + 1);
-          arrayWords[0] = firstWord;
+          arrayWords.Add(firstWord);
           break;
         }
       }
@@ -54,40 +67,28 @@ namespace Task1
           result = Console.ReadLine();
         }
 
-        check = checkWord(firstWord, arrayWords, arrayLetters, result);
+        check = checkWord(arrayWords, arrayLetters, result);
         if (!check)
         {
           Console.Write("User " + i + " lose.");
           break;
         }
-        Array.Resize(ref arrayWords, arrayWords.Length + 1);
-        arrayWords[arrayWords.Length-1] = result;
+        arrayWords.Add(result);
         if (i == playerNum) i = 0;
       }
       
     }
 
-    static bool checkWord(string firstWord, string[] arrayWords, Dictionary<char, int> arrayLetters, string result)
+    static bool checkWord(List<string> arrayWords, Dictionary<char, int> arrayLetters, string result)
     {
-      foreach (string str in arrayWords)
-      {
-        if (str == result) return false;
-      }
+      var containsResult = arrayWords.Contains(result);
+      if (containsResult) return false;
 
-      foreach (char ch in firstWord)
+      foreach (var elem in arrayLetters)
       {
-        bool check = result.Contains(ch);
-        if (!check) return false;
-      }
-
-      foreach (char letter in result.Distinct().ToArray())
-      {
-        int count = result.Count(i => i == letter);
-
-        foreach (var elem in arrayLetters)
-        {
-          if (letter == elem.Key && count != elem.Value) return false;
-        }
+        if (!result.Contains(elem.Key)) return false;
+        int count = result.Count(i => i == elem.Key);
+        if (count != elem.Value) return false;
       }
 
       return true;
