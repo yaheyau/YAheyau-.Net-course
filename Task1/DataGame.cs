@@ -3,62 +3,39 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Task1
 {
-  internal class DataGame
+  internal class DataGame : IDataService
   {
-    private const string path = "../../../score.txt";
-    public string getScoreGame(Dictionary<User, int> scoreGame)
+    private const string path = "../../../score.json";
+    public List<User> GetScoreGame()
     {
-      string toString = "";
+      List<User> result = new List<User>();
       try
       {
         using (StreamReader reader = new StreamReader(path))
         {
-          string? line;
-          while ((line = reader.ReadLine()) != null)
-          {
-            if (line != "")
-            {
-              string[] keyValue = line.TrimStart('\n').Split(':');
-              //if the player has already played the current result, add the previous one
-              if (scoreGame.ContainsKey(new User(keyValue[0])))
-              {
-                toString += keyValue[0] + ": " + (int.Parse(keyValue[1].Trim(';')) + scoreGame[new User(keyValue[0])]) + ";\n";
-                scoreGame.Remove(new User(keyValue[0]));
-              }
-              else
-              {
-                toString += keyValue[0] + ": " + keyValue[1].Trim(';') + ";\n";
-              }
-            }
-          }
-
-          //played for the first time
-          foreach (var elem in scoreGame)
-          {
-            toString += elem.Key.name + ": " + elem.Value + ";\n";
-          }
+          JsonSerializer serializer = new JsonSerializer();
+          result = (List<User>)serializer.Deserialize(reader, typeof(List<User>));
           reader.Close();
         }
       }
       catch (FileNotFoundException e)
       {
-        foreach (var elem in scoreGame)
-        {
-          toString += elem.Key.name + ": " + elem.Value + ";\n";
-        }
+        Console.WriteLine(e.Message);
       }
-      return toString;
+      return result;
     }
 
-    public void writeResultGame (string toString)
+    public void WriteResultGame (List<User> scoreGame)
     {
-      using (StreamWriter writer = new StreamWriter(path, false))
+      using (StreamWriter file = File.CreateText(path))
       {
-        writer.WriteLineAsync(toString);
-        writer.Close();
+        JsonSerializer serializer = new JsonSerializer();
+        serializer.Serialize(file, scoreGame);
+        Console.WriteLine("Data has been saved to file");
       }
     }
   }

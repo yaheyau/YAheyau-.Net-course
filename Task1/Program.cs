@@ -1,10 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
-using static Task1.Game;
-
-namespace Task1
+﻿namespace Task1
 {
 
 internal class Program

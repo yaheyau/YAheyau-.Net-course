@@ -10,17 +10,15 @@ namespace Task1
   internal class Game
   {
     private byte playerNum;
-    private string pattern = @"^[A-Za-z]+$";
-    List<User> arrayNames = new List<User>();
-    Dictionary<User, int> scoreGame = new Dictionary<User, int>() { };
-    string firstWord;
-    List<string> arrayWords = new List<string>();
-    Dictionary<char, int> arrayLetters = new Dictionary<char, int>() { };
+    private const string pattern = @"^[A-Za-z]+$";
+    string FirstWord;
+    List<User> ArrayUsers = new List<User>();
+    HashSet<String> ArrayWords = new HashSet<String>();
+    Dictionary<char, int> ArrayLetters = new Dictionary<char, int>() { };
     public void EnterUserNumber()
     {
       while (true)
       {
-        Console.Write("111");
         Console.Write("Enter number of players: ");
         string value = Console.ReadLine();
         bool checkParse = byte.TryParse(value, out playerNum);
@@ -47,15 +45,14 @@ namespace Task1
           {
             Console.WriteLine("You can't use symbols, only letters.");
           }
-          else if (arrayNames.Any(elem => elem.name == name))
+          else if (ArrayUsers.Any(elem => elem.Name == name))
           {
             Console.WriteLine("The name already exist.");
           }
           else
           {
-            User newUser = new(name);
-            arrayNames.Add(newUser);
-            scoreGame[newUser] = 0;
+            User newUser = new(name, 0);
+            ArrayUsers.Add(newUser);
             break;
           }
         }
@@ -66,25 +63,25 @@ namespace Task1
     {
       while (true)
       {
-        Console.Write($"{arrayNames[0].name} enters first word: ");
-        firstWord = Console.ReadLine();
-        if (firstWord.Length < 9 || firstWord.Length > 30)
+        Console.Write($"{ArrayUsers[0].Name} enters first word: ");
+        FirstWord = Console.ReadLine();
+        if (FirstWord.Length < 9 || FirstWord.Length > 30)
         {
           Console.WriteLine("Word must be more than 8 and less than 30 symbols.");
         }
-        else if (!Regex.IsMatch(firstWord, pattern))
+        else if (!Regex.IsMatch(FirstWord, pattern))
         {
           Console.WriteLine("You can't use symbols, only letters.");
         }
         else
         {
-          foreach (char letter in firstWord.Distinct())
+          foreach (char letter in FirstWord.Distinct())
           {
-            int count = firstWord.Count(i => i == letter);
-            arrayLetters[letter] = count;
+            int count = FirstWord.Count(i => i == letter);
+            ArrayLetters[letter] = count;
           }
-          arrayWords.Add(firstWord);
-          scoreGame[arrayNames[0]] += 1;
+          ArrayWords.Add(FirstWord);
+          ArrayUsers[0].Point += 1;
           break;
         }
       }
@@ -98,7 +95,7 @@ namespace Task1
 
       while (check)
       {
-        Console.Write($"{arrayNames[i].name} enters: ");
+        Console.Write($"{ArrayUsers[i].Name} enters: ");
         result = Console.ReadLine();
 
         var Commands = new Dictionary<string, Action>()
@@ -122,19 +119,18 @@ namespace Task1
           result = Console.ReadLine();
         }
 
-        check = checkWord(arrayWords, arrayLetters, result);
+        check = checkWord(ArrayWords, ArrayLetters, result);
         if (!check)
         {
-          DataGame dataGame = new DataGame();
-          string dataScore = dataGame.getScoreGame(scoreGame);
-          dataGame.writeResultGame(dataScore);
+          IDataService _service = new DataGame();
+          _service.WriteResultGame(GetScoringPoints(ArrayUsers));
 
-          Console.Write($"{arrayNames[i].name} lose.");
+          Console.Write($"{ArrayUsers[i].Name} lose.");
           break;
         }
 
-        arrayWords.Add(result);
-        scoreGame[arrayNames[i]] += 1;
+        ArrayWords.Add(result);
+        ArrayUsers[i].Point += 1;
 
         if (i == playerNum - 1)
         {
@@ -149,7 +145,7 @@ namespace Task1
 
     private void ShowAllWords()
     {
-      foreach (string elem in arrayWords)
+      foreach (string elem in ArrayWords)
       {
         Console.WriteLine($"{elem}");
       }
@@ -157,22 +153,43 @@ namespace Task1
 
     private void ScoreCurrentGame()
     {
-      foreach (var elem in scoreGame)
+      foreach (var elem in ArrayUsers)
       {
-        Console.WriteLine(elem.Key.name + " - " + elem.Value + ";   ");
+        Console.WriteLine(elem.Name + " - " + elem.Point + ";   ");
       }
     }
 
     private void ScoreAllTime()
     {
-      DataGame dataGame = new DataGame();
-      Console.WriteLine(dataGame.getScoreGame(scoreGame));
+      foreach (var elem in GetScoringPoints(ArrayUsers))
+      {
+        Console.WriteLine(elem.Name + " - " + elem.Point + ";   ");
+      }
     }
 
-    private bool checkWord(List<string> arrayWords, Dictionary<char, int> arrayLetters, string result)
+    private List<User> GetScoringPoints(List<User> arrayUsers)
     {
-      var containsResult = arrayWords.Contains(result);
-      if (containsResult) return false;
+      IDataService _service = new DataGame();
+      foreach (var elem in _service.GetScoreGame())
+      {
+        //if the player has already played the current result, add the previous one
+        if (arrayUsers.Contains(elem))
+        {
+          var index = arrayUsers.FindIndex(user => user.Name == elem.Name);
+          arrayUsers[index].Point += elem.Point;
+        }
+        else
+        {
+          arrayUsers.Add(elem);
+        }
+      }
+      return arrayUsers;
+    }
+
+    private bool checkWord(HashSet<string> arrayWords, Dictionary<char, int> arrayLetters, string result)
+    {
+      bool isAdded = arrayWords.Add(result);
+      if (!isAdded) return false;
 
       foreach (var elem in arrayLetters)
       {

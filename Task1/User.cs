@@ -8,12 +8,17 @@ namespace Task1
 {
   internal class User
   {
-    public string name;
-    public User(string name) { this.name = name; }
+    public string Name;
+    public int Point;
+    public User(string name, int point)
+    {
+      this.Name = name;
+      this.Point = point;
+    }
 
     public bool Equals(User other)
     {
-      return name != other.name ? false : true;
+      return Name != other.Name ? false : true;
     }
     public override bool Equals(object obj)
     {
@@ -23,8 +28,8 @@ namespace Task1
     }
     public override int GetHashCode()
     {
-      if (name == null) return 0;
-      return name.GetHashCode();
+      if (Name == null) return 0;
+      return Name.GetHashCode();
     }
   }
 }
